@@ -99,7 +99,7 @@ function handleFileSelection(event) {
 }
 
 function getWayback(original) {
-  let available = `http://archive.org/wayback/available?url=${original}`;
+  let available = `https://archive.org/wayback/available?url=${original}`;
   const xhr = new XMLHttpRequest();
   xhr.open("GET", available, false);
   xhr.send();
