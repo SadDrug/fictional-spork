@@ -2,12 +2,40 @@ var fileToRead = document.getElementById("yourFile");
 
 const main = document.getElementById('main');
 
+function view() {
+  const id = `view-frame`;
+  // create a label
+  const label = document.createElement('label');
+  label.setAttribute("for", id);
+  
+  // create a checkbox
+  const checkbox = document.createElement('input');
+  checkbox.type = "checkbox";
+  checkbox.name = "view";
+  checkbox.value = "View Frame";
+  checkbox.id = id;
+ 
+  // place the checkbox inside a label
+  label.appendChild(checkbox);
+  // create text node
+  label.appendChild(document.createTextNode("View Frame"));
+  
+  checkbox.addEventListener("click", () => {
+    var checked = checkbox.checked;
+    let frame = document.getElementById("frame");
+    frame.style.visibility = checked ? "visible" : "hidden" 
+  })
+  // add the label to the root
+  document.getElementById("main").appendChild(label);
+}
+
 function prepareFrame(srcdoc) {
   var ifrm = document.createElement("iframe");
   ifrm.setAttribute("id", "frame");
   ifrm.setAttribute("srcdoc", srcdoc);
   ifrm.style.visibility = "hidden";
   document.body.appendChild(ifrm);
+  view();
   return ifrm
   
 }
@@ -35,6 +63,7 @@ function frameImages() {
   // console.log(frame.contentWindow)
   return doc.images
 }
+
 
 fileToRead.addEventListener("change", handleFileSelection);
 
