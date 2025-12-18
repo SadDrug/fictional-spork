@@ -156,52 +156,28 @@ function getArchived(img) {
   img.src = getWaybackURL(url);
 }
 
+function showLoader() {
+    const loader = document.getElementById("loader");
+    loader.hidden = false;
+}
+function hideLoader() {
+    const loader = document.getElementById("loader");
+    loader.hidden = true;
+}
+
+
 function manageImages() {
   const images = frameImages();
   const count = images.length;
-  let progress = progressBar(count);
-  console.log(images.length)
+  hideRunButton();
+  showLoader();
+  console.log(images.length);
   for (let i = 0; i < count; i++) {
     getArchived(images[i]);
-    if (i % 10 === 0) {
-      progress.move()
-    }
   }
-  progress.hide()
+  hideLoader();
 }
 
-function progressBar(length) {
-    const progress = document.getElementById("myProgress");
-    const bar = document.getElementById("myBar");
-
-    show();
-
-    let count = 0;
-
-    function percent() {
-        return count / length
-    }
-
-    function move() {
-        count++;
-        var width = percent() * 100;
-        if (width >= 100) {
-            hide()
-        } else {
-            bar.style.width = width + "%";
-        }
-    }
-    function hide() {
-        progress.hidden = true;
-    }
-    function show() {
-        progress.hidden = false;
-    }
-
-    return {
-        move, hide, show
-    }
-}
 
 function wait(sec) {
   setTimeout(() => {
