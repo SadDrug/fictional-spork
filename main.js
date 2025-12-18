@@ -105,9 +105,6 @@ function handleFileSelection(event) {
   const reader = new FileReader();
   reader.onload = () => {
     prepareFrame(reader.result);
-    console.log("prepareFrame");
-    // wait()
-    // manageImages(images);
     hideSaveButton();
     showRunButton();
   };
@@ -157,7 +154,6 @@ function getArchived(img) {
     return
   }
   img.src = getWaybackURL(url);
-  console.log(img)
 }
 
 function manageImages() {
@@ -172,7 +168,6 @@ function manageImages() {
     }
   }
   progress.hide()
-  console.log("manageImages")
 }
 
 function progressBar(length) {
