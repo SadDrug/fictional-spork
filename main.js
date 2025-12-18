@@ -1,96 +1,115 @@
-var fileToRead = document.getElementById("yourFile");
+const fileToRead = document.getElementById("yourFile");
 
 const main = document.getElementById('main');
 
 function view() {
   const id = `view-frame`;
+  const create = !document.getElementById(id);
+  if (!create) {
+      return;
+  }
+
   // create a label
   const label = document.createElement('label');
   label.setAttribute("for", id);
-  
+
   // create a checkbox
   const checkbox = document.createElement('input');
   checkbox.type = "checkbox";
   checkbox.name = "view";
   checkbox.value = "View Frame";
   checkbox.id = id;
- 
+
   // place the checkbox inside a label
   label.appendChild(checkbox);
   // create text node
   label.appendChild(document.createTextNode("View Frame"));
-  
+
   checkbox.addEventListener("click", () => {
     var checked = checkbox.checked;
     let frame = document.getElementById("frame");
-    frame.style.visibility = checked ? "visible" : "hidden" 
+    frame.style.visibility = checked ? "visible" : "hidden";
   })
   // add the label to the root
   document.getElementById("main").appendChild(label);
 }
 
 function prepareFrame(srcdoc) {
-  var ifrm = document.createElement("iframe");
-  ifrm.setAttribute("id", "frame");
+  const id = "frame";
+  const create = !document.getElementById(id);
+  const ifrm = create ? document.createElement("iframe") : document.getElementById(id);
+  ifrm.setAttribute("id", id);
   ifrm.setAttribute("srcdoc", srcdoc);
-  ifrm.style.visibility = "hidden";
-  document.body.appendChild(ifrm);
+  ifrm.style.visibility = create ? "hidden" : ifrm.style.visibility;
+  if (create) {
+    document.body.appendChild(ifrm);
+  }
   view();
   return ifrm
-  
+
+}
+
+function setUpButtons() {
+    runButton.addEventListener("click", () => {
+        manageImages();
+        showSaveButton();
+    });
+    saveButton.addEventListener("click", downloadHTML)
 }
 
 function showRunButton() {
-  const button = document.getElementById("run")
-  button.addEventListener("click", () => {
-    manageImages();
-    showSaveButton();
-  })
-  button.hidden = false;
+    runButton.hidden = false;
+}
+
+function hideRunButton() {
+    runButton.hidden = true;
 }
 
 function showSaveButton() {
-  const run = document.getElementById("run")
-  run.hidden = true;
-  const save = document.getElementById("save")
-  save.addEventListener("click", downloadHTML)
-  save.hidden = false;
+    hideRunButton()
+    saveButton.hidden = false;
+}
+
+function hideSaveButton() {
+    saveButton.hidden = true;
 }
 
 function frameImages() {
   const frame = document.getElementById('frame')
   const doc = frame.contentWindow.document
-  // console.log(frame.contentWindow)
   return doc.images
 }
 
-
 fileToRead.addEventListener("change", handleFileSelection);
+
+const runButton = document.getElementById("run")
+const saveButton = document.getElementById("save")
+
+setUpButtons();
 
 function handleFileSelection(event) {
   const file = event.target.files[0];
-  
+
   // Validate file existence and type
   if (!file) {
     showMessage("No file selected. Please choose a file.", "error");
     return;
   }
-  
+
   if (!file.type.startsWith("text")) {
     showMessage("Unsupported file type. Please select a text file.", "error");
     return;
   }
-  
+
   // Read the file
   const reader = new FileReader();
   reader.onload = () => {
-    const frame = prepareFrame(reader.result);
-    console.log("prepareFrame")
+    prepareFrame(reader.result);
+    console.log("prepareFrame");
     // wait()
-    // const images = frameImages();
-    // console.log(images.length)
     // manageImages(images);
-    showRunButton()
+    hideSaveButton();
+    showRunButton();
   };
   reader.onerror = () => {
     showMessage("Error reading the file. Please try again.", "error");
@@ -103,23 +122,21 @@ function getWayback(original) {
   const xhr = new XMLHttpRequest();
   xhr.open("GET", available, false);
   xhr.send();
-  if (xhr.readyState == 4 && xhr.status == 200) {
+  if (xhr.readyState === 4 && xhr.status === 200) {
     const data = JSON.parse(xhr.response);
-    if (Object.keys(data.archived_snapshots).length) {
-      let closest = data.archived_snapshots.closest;
-      return closest;
+    if (Object.keys(data["archived_snapshots"]).length) {
+      return data["archived_snapshots"]["closest"];
     } else {
+      if (original.endsWith("*")) return;
       const url = new URL(original);
-      if (url.hash != "" || url.search != "") {
+      if (url.hash !== "" || url.search !== "") {
         url.hash = url.search = ""
-        return getWayback(`${url.href}*`);
       }
-      return
+      return getWayback(`${url.href}*`);
     }
   } else {
     console.log(`${original}`);
     console.log(`Error: ${xhr.status}`);
-    return;
   }
 }
 
@@ -127,7 +144,7 @@ const noUI = (closest) => closest.url.replace(closest.timestamp, `${closest.time
 
 function getWaybackURL(original) {
   let wayback = getWayback(original);
-  if (wayback != undefined) {
+  if (wayback !== undefined) {
     return noUI(wayback)
   }
   return original
@@ -135,32 +152,65 @@ function getWaybackURL(original) {
 
 function getArchived(img) {
   var url = img.src;
-  if (url == "") {
+  if (url === "") {
     console.log(img)
     return
   }
-  let wayback = getWaybackURL(url);
-  img.src = wayback;
+  img.src = getWaybackURL(url);
   console.log(img)
 }
 
 function manageImages() {
   const images = frameImages();
+  const count = images.length;
+  let progress = progressBar(count);
   console.log(images.length)
-  // let i = 0;
-  for (let image of images) {
-    // if (i >= 3) break;
-    getArchived(image);
-    // console.log("getArchived");
-    // wait(2);
-    // i++;
+  for (let i = 0; i < count; i++) {
+    getArchived(images[i]);
+    if (i % 10 === 0) {
+      progress.move()
+    }
   }
+  progress.hide()
   console.log("manageImages")
+}
+
+function progressBar(length) {
+    const progress = document.getElementById("myProgress");
+    const bar = document.getElementById("myBar");
+
+    show();
+
+    let count = 0;
+
+    function percent() {
+        return count / length
+    }
+
+    function move() {
+        count++;
+        var width = percent() * 100;
+        if (width >= 100) {
+            hide()
+        } else {
+            bar.style.width = width + "%";
+        }
+    }
+    function hide() {
+        progress.hidden = true;
+    }
+    function show() {
+        progress.hidden = false;
+    }
+
+    return {
+        move, hide, show
+    }
 }
 
 function wait(sec) {
   setTimeout(() => {
-    console.log(`Delayed for ${sec} second${ sec != 1 ? "s" : ""}.`);
+    console.log(`Delayed for ${sec} second${sec !== 1 ? "s" : ""}.`);
   }, 1000 * sec);
 }
 
@@ -168,25 +218,32 @@ function getHTML() {
   var s = new XMLSerializer();
   let frame = document.getElementById("frame");
   const doc = frame.contentWindow.document;
-  var str = s.serializeToString(doc);
-  return str;
+  return s.serializeToString(doc);
 }
 
 function downloadHTML() {
   const content = getHTML();
   // Create element with <a> tag
   const link = document.createElement("a");
-  
+
   // Create a blog object with the file content which you want to add to the file
   const file = new Blob([content], { type: 'text/html' });
-  
+
   // Add file content in the object URL
   link.href = URL.createObjectURL(file);
-  
+
   // Add file name
   link.download = `waybacked-${fileToRead.files[0].name}`;
-  
+
   // Add click event to <a> tag to save file.
   link.click();
   URL.revokeObjectURL(link.href);
 }
+
+function showMessage(message, type) {
+    messageDisplay.textContent = message;
+    messageDisplay.style.color = type === "error" ? "red" : "green";
+}
+
+
+const messageDisplay = document.getElementById("message");
